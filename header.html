@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSystem - Store Limited</title>
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+    <link rel="stylesheet" href="header.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <a href="#" class="logo">Store<span>Limited</span></a>
+            
+            <nav class="nav-links" id="navMenu">
+                <ul>
+                    <li><a href="#" onclick="showSection('trangchu')" id="nav-home" class="active">Trang chủ</a></li>
+                    <li><a href="#" onclick="showSection('sanpham')" id="nav-products">Sản phẩm</a></li>
+                    <li><a href="#" onclick="showSection('blog')" id="nav-blog">Blog</a></li>
+                    <li><a href="#">Liên hệ</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." oninput="searchProduct()">
+                    <button type="button">🔍</button>
+                </div>
+                
+                <a href="javascript:void(0)" class="icon-btn cart-btn" onclick="openCart()">
+                    🛒<span class="badge">0</span>
+                </a>
+                
+                <div id="auth-buttons"></div>
+            </div>
+
+            <button class="mobile-menu-btn" onclick="document.getElementById('navMenu').classList.toggle('active')">☰</button>
+        </div>
+    </header>
+
+<main id="home-content">
+    <section class="hero-intro">
+    <div class="container">
+        <div class="intro-box">
+            <h1 class="glitch-text">STORE <span>LIMITED</span></h1>
+
+            <p class="subtitle">
+                Nơi hội tụ những siêu phẩm công nghệ độc bản dành cho dân chơi hệ Hi-Tech.
+                Chúng tôi mang đến các thiết bị từ flagship cao cấp, phụ kiện hiếm cho đến
+                những món đồ công nghệ giới hạn mà bạn khó có thể tìm thấy ở bất kỳ đâu.
+            </p>
+
+            <p class="description">
+                Không chỉ là một cửa hàng, STORE LIMITED còn là không gian dành cho những người
+                đam mê công nghệ, nơi bạn có thể khám phá xu hướng mới nhất, trải nghiệm sản phẩm
+                đỉnh cao và nâng tầm phong cách sống số của mình.
+            </p>
+
+            <div class="stats-container">
+                <div class="stat-item"><strong>100%</strong><span>Authentic</span></div>
+                <div class="stat-item"><strong>24/7</strong><span>Support</span></div>
+                <div class="stat-item"><strong>Global</strong><span>Shipping</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <section class="top-showcase">
+        <div class="container">
+            <h2 class="section-title">💎 ĐẲNG CẤP THƯỢNG LƯU (TOP 3)</h2>
+            <div class="top-grid" id="topPriceProducts">
+                </div>
+        </div>
+    </section>
+</main>
+
+<main>
+    <div id="home-content">
+        </div>
+
+    <div id="blog-content" style="display: none;">
+        <section class="blog-section">
+            <div class="container">
+                <h2 class="section-title">✨ TECH INSIDER BLOG</h2>
+                <div class="blog-grid">
+                    <article class="blog-card">
+                        <div class="blog-thumb">
+                            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=500" alt="Tech News">
+                            <div class="badge">News</div>
+                        </div>
+                        <div class="blog-body">
+                            <h3>Tương lai của thiết bị đeo thông minh 2026</h3>
+                            <p>Khám phá cách AI đang thay đổi hoàn toàn trải nghiệm người dùng trên các thiết bị đeo nhỏ gọn...</p>
+                            <a href="#" class="read-more">Xem chi tiết ➔</a>
+                        </div>
+                    </article>
+
+                    <article class="blog-card">
+                        <div class="blog-thumb">
+                            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=500" alt="Review">
+                            <div class="badge">Review</div>
+                        </div>
+                        <div class="blog-body">
+                            <h3>Mở hộp siêu phẩm "Limited Edition" tháng này</h3>
+                            <p>Cận cảnh món đồ công nghệ chỉ có 50 bản trên toàn thế giới vừa cập bến Store Limited...</p>
+                            <a href="#" class="read-more">Xem chi tiết ➔</a>
+                        </div>
+                    </article>
+
+                    <article class="blog-card">
+                        <div class="blog-thumb">
+                            <img src="https://images.unsplash.com/photo-1558562805-4bf1e2a724eb?w=500" alt="Setup">
+                            <div class="badge">Setup</div>
+                        </div>
+                        <div class="blog-body">
+                            <h3>Bí quyết Setup góc làm việc chuẩn Hi-Tech</h3>
+                            <p>Làm thế nào để phối hợp ánh sáng Neon và phong cách tối giản cho góc làm việc của bạn?</p>
+                            <a href="#" class="read-more">Xem chi tiết ➔</a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+    <div id="product-content" style="display: none;">
+        <div class="header-marquee">
+            <div class="marquee-content">
+                <h2 id="welcome-msg" class="running"></h2>
+            </div>
+        </div>
+
+        <div class="container-full">
+            <div id="admin-section" class="admin-panel" style="display: none;">
+                <h3>🛠️ Quản lý: Thêm sản phẩm mới</h3>
+                <div class="admin-form">
+                    <div class="form-group">
+                        <label>Tên sản phẩm:</label>
+                        <input type="text" id="prodName" placeholder="Nhập tên sản phẩm...">
+                    </div>
+                    <div class="form-group">
+                        <label>Giá tiền:</label>
+                        <input type="number" id="prodPrice" placeholder="Nhập giá...">
+                    </div>
+                    <div class="form-group">
+                        <label>Chọn ảnh:</label>
+                        <input type="file" id="prodImgFile" accept="image/*">
+                    </div>
+                    <button onclick="addProduct()" class="btn-submit">🚀 Đăng sản phẩm</button>
+                </div>
+            </div>
+
+            <h3 class="section-title">📦 Danh sách sản phẩm</h3>
+            <div class="product-list" id="productList"></div>
+        </div>
+    </div>
+
+<div id="cartModal" class="modal">
+    <div class="modal-content"> 
+        <span class="close-btn" onclick="closeCart()">&times;</span>
+        <h2 style="text-align: center;">🛒 Giỏ hàng của bạn</h2>
+        <hr>
+        
+        <div class="cart-header">
+            <div style="width: 5%;"></div>
+            <div style="width: 40%;">Sản Phẩm</div>
+            <div style="width: 15%; text-align: center;">Đơn Giá</div>
+            <div style="width: 15%; text-align: center;">Số Lượng</div>
+            <div style="width: 15%; text-align: center;">Số Tiền</div>
+            <div style="width: 10%; text-align: center;">Thao Tác</div>
+        </div>
+
+        <div id="cartItemsList"></div>
+
+        <div class="cart-footer">
+            <div class="select-all-container">
+                <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                <label for="selectAll">Chọn tất cả</label>
+            </div>
+
+            <div class="checkout-section">
+                <div class="total-info-box">
+                    <p class="total-label">
+                        Tổng thanh toán (<span id="selectedCount" style="color: #ff9f43; font-weight: bold;">0</span> sản phẩm):
+                    </p>
+                    <p class="total-amount">
+                        <span id="totalPrice">0</span>
+                        <span class="currency-symbol">đ</span>
+                    </p>
+                </div>
+
+                <button class="btn-checkout" onclick="checkoutSelected()">
+                    Thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 
+
+    <div id="footer"></div>
+
+    <script src="sanpham.js"></script>
+    
+    <script>
+        // Load Footer
+        fetch("footer.html")
+            .then(res => res.text())
+            .then(data => {
+                const footer = document.getElementById("footer");
+                if(footer) footer.innerHTML = data;
+            })
+            .catch(err => console.log("Lỗi tải footer"));
+
+        // Click ra ngoài vùng Modal để tự động đóng
+        window.onclick = function(event) {
+            let modal = document.getElementById('cartModal');
+            if (event.target == modal) {
+                closeCart();
+            }
+        }
+    </script>
+</body>
+</html>

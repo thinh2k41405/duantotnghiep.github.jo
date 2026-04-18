@@ -1,0 +1,34 @@
+/* Tùy chỉnh riêng cho thẻ giới thiệu ở trang chủ */
+.intro-card {
+    justify-content: center;
+    min-height: 250px;
+    cursor: default;
+}
+
+.intro-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px var(--neon-blue));
+}
+
+.intro-card h3 {
+    color: var(--neon-blue);
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.intro-card p {
+    color: #ccc;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Đảm bảo phần nội dung trang chủ ẩn/hiện đúng */
+.section-content {
+    display: none; /* Mặc định ẩn, sẽ dùng JS để hiện */
+    animation: fadeIn 0.8s ease;
+}
+
+.section-content.active {
+    display: block;
+}
