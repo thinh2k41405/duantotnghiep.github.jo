@@ -121,7 +121,7 @@ window.onload = function() {
     const msgBox = document.getElementById('message-box');
 
     // QUAN TRỌNG: Thay link này bằng link Render của bạn
-    const API_URL = 'https://ShopLimited.onrender.com'; 
+   const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
 
     // --- 1. HÀM HIỂN THỊ THÔNG BÁO ---
     function showMsg(text, type) {

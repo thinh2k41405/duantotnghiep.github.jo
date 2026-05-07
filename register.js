@@ -1,6 +1,6 @@
 
 // 1. KHAI BÁO LINK SERVER (Thay link Render của bạn vào đây)
-const API_BASE_URL = 'https://shop-api-cua-ban.onrender.com'; 
+const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
 
 document.getElementById('btnRegister').addEventListener('click', function () {
     const user = document.getElementById('regUsername').value;

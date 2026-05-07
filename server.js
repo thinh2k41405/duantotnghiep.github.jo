@@ -114,7 +114,11 @@ const app = express();
 // Cấu hình giới hạn dung lượng để nhận được ảnh từ client
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: '*', // Cho phép tất cả các nguồn truy cập để tránh lỗi đỏ lúc nãy
+    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+    allowedHeaders: ['Content-Type']
+}));
 
 // --- MỚI: PHỤC VỤ GIAO DIỆN (FRONTEND) ---
 // Giúp Server hiểu và mở được các file HTML, CSS, JS trong thư mục gốc

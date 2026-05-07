@@ -430,7 +430,7 @@ const role = sessionStorage.getItem('userRole');
 const user = sessionStorage.getItem('username');
 
 // QUAN TRỌNG: Thay link này bằng link thật sau khi bạn tạo Web Service trên Render thành công
-const API_URL = 'https://ShopLimited.onrender.com'; 
+const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
 
 
 // --- 1. CHUYỂN ĐỔI GIAO DIỆN (SECTION) ---
