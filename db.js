@@ -1,4 +1,4 @@
-const sql = require('mssql');
+/*onst sql = require('mssql');
 
 const config = {
     user: 'sa',
@@ -26,4 +26,29 @@ const poolPromise = sql.connect(config)
 module.exports = {
     sql,
     poolPromise
-};
+};*/
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+
+// Tạo file database ngay trong thư mục code
+const dbPath = path.resolve(__dirname, 'database.sqlite');
+
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) console.error('❌ Lỗi kết nối:', err.message);
+    else console.log('✅ Đã kết nối Database SQLite miễn phí!');
+});
+
+// Tự động tạo bảng (Nếu chưa có)
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        email TEXT,
+        full_name TEXT,
+        role TEXT DEFAULT 'user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+});
+
+module.exports = db;
