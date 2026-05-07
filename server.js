@@ -106,13 +106,24 @@ app.delete('/delete-product/:id', async (req, res) => {
 app.listen(3000, () => console.log("🚀 Server chạy tại: http://localhost:3000"));*/
 const express = require('express');
 const cors = require('cors');
-const db = require('./db'); // Import file db.js đã sửa sang SQLite
+const path = require('path'); // Thêm thư viện để xử lý đường dẫn file
+const db = require('./db'); 
 
 const app = express();
 
+// Cấu hình giới hạn dung lượng để nhận được ảnh từ client
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
+
+// --- MỚI: PHỤC VỤ GIAO DIỆN (FRONTEND) ---
+// Giúp Server hiểu và mở được các file HTML, CSS, JS trong thư mục gốc
+app.use(express.static(path.join(__dirname, '/')));
+
+// Tự động mở file Dangnhap.html (hoặc file chính của bạn) khi vào link gốc
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Dangnhap.html')); 
+});
 
 // --- 1. ROUTE ĐĂNG NHẬP ---
 app.post('/login', (req, res) => {
@@ -175,8 +186,8 @@ app.delete('/delete-product/:id', (req, res) => {
     });
 });
 
-// QUAN TRỌNG: Sửa để Render tự cấp Port
+// QUAN TRỌNG: Cấu hình cho Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server thật chạy tại cổng: ${PORT}`);
+    console.log(`🚀 Server đang chạy trên cổng: ${PORT}`);
 });
