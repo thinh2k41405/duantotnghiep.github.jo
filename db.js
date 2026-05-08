@@ -40,6 +40,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Tự động tạo bảng (Nếu chưa có)
 db.serialize(() => {
+    db.run(`INSERT OR IGNORE INTO users (username, password, email, full_name, role) 
+        VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')`);
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
