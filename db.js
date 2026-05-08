@@ -29,15 +29,24 @@ module.exports = {
 };*/
 const { Pool } = require('pg');
 
-// Link kết nối Neon của bạn (Đã bao gồm mật khẩu npg_5IdBOpKNbRm3)
-const connectionString = 'postgresql://neondb_owner:npg_5IdBOpKNbRm3@ep-silent-night-aowm1oe8.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
-
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false // Bắt buộc để kết nối an toàn với Neon
-    }
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    // Sửa dòng này để khớp với yêu cầu của Neon và Render
+    rejectUnauthorized: false 
+  }
 });
+
+// Kiểm tra kết nối
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error('❌ Lỗi kết nối database:', err.stack);
+  }
+  console.log('✅ Đã kết nối thành công tới Neon PostgreSQL');
+  release();
+});
+
+module.exports = pool;
 
 // Khởi tạo cấu trúc dữ liệu (Tự động tạo bảng trên Neon)
 const initDb = async () => {
