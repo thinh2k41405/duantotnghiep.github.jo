@@ -32,23 +32,11 @@ const { Pool } = require('pg');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    // Sửa dòng này để khớp với yêu cầu của Neon và Render
-    rejectUnauthorized: false 
+    rejectUnauthorized: false
   }
 });
 
-// Kiểm tra kết nối
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error('❌ Lỗi kết nối database:', err.stack);
-  }
-  console.log('✅ Đã kết nối thành công tới Neon PostgreSQL');
-  release();
-});
-
-module.exports = pool;
-
-// Khởi tạo cấu trúc dữ liệu (Tự động tạo bảng trên Neon)
+// Khởi tạo cấu trúc dữ liệu
 const initDb = async () => {
     try {
         // 1. Tạo bảng Users
@@ -64,47 +52,48 @@ const initDb = async () => {
             )
         `);
 
-        // 2. Tạo bảng Products (Sản phẩm)
+        // 2. Tạo bảng Products
         await pool.query(`
             CREATE TABLE IF NOT EXISTS products (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL,
                 price DECIMAL NOT NULL,
-                image TEXT, -- Lưu ảnh dưới dạng chuỗi Base64
+                image TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
 
-        // 3. Chèn tài khoản Admin mặc định (admin / 12345)
+        // 3. Chèn Admin (Sử dụng tham số để tránh SQL Injection)
         const insertAdmin = `
             INSERT INTO users (username, password, email, full_name, role)
-            VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')
+            VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (username) DO NOTHING
         `;
-        await pool.query(insertAdmin);
+        await pool.query(insertAdmin, ['admin', '12345', 'admin@example.com', 'Administrator', 'admin']);
 
-        console.log("✅ Neon PostgreSQL: Đã kết nối và khởi tạo bảng thành công!");
+        console.log("✅ Neon PostgreSQL: Khởi tạo bảng thành công!");
     } catch (err) {
         console.error("❌ Lỗi khởi tạo Database Neon:", err.message);
     }
 };
 
-// Gọi hàm khởi tạo
 initDb();
 
-// Export các hàm hỗ trợ để dùng trong server.js (Giữ tên cũ để ít phải sửa server.js nhất)
 module.exports = {
+    // Luôn dùng cái này để thực thi lệnh
     query: (text, params) => pool.query(text, params),
-    // Hàm get (lấy 1 dòng)
+    
+    // Hàm lấy 1 dòng - Dùng cho Register/Login check
     get: async (text, params) => {
         const res = await pool.query(text, params);
-        return res.rows[0];
+        return res.rows.length > 0 ? res.rows[0] : null; // Trả về null nếu ko có
     },
-    // Hàm all (lấy danh sách)
+
+    // Hàm lấy danh sách
     all: async (text, params) => {
         const res = await pool.query(text, params);
         return res.rows;
     },
-    // Hàm run (thực thi lệnh không trả về dữ liệu)
+
     run: (text, params) => pool.query(text, params)
 };
