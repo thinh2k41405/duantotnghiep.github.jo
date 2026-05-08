@@ -424,17 +424,17 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTop3Premium(); // Chạy lấy Top 3
     // Các hàm khác của bạn...
 });*/
+// --- 0. KHAI BÁO BIẾN TOÀN CỤC ---
+// Sửa lỗi: Chỉ dùng 'let' để có thể cập nhật giá trị mà không bị báo lỗi khai báo trùng (Duplicate declaration)
+let role = sessionStorage.getItem('userRole');
+let user = sessionStorage.getItem('username');
 
-// Lấy thông tin đăng nhập từ hệ thống
-const role = sessionStorage.getItem('userRole');
-const user = sessionStorage.getItem('username');
-
-// QUAN TRỌNG: Thay link này bằng link thật sau khi bạn tạo Web Service trên Render thành công
+// QUAN TRỌNG: Link Render của bạn
 const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
 
-
 // --- 1. CHUYỂN ĐỔI GIAO DIỆN (SECTION) ---
-function showSection(section) {
+// Sửa lỗi: Gán vào window để file header.html có thể gọi được hàm này
+window.showSection = function(section) {
     const home = document.getElementById('home-content');
     const products = document.getElementById('product-content');
     const blog = document.getElementById('blog-content');
@@ -444,24 +444,29 @@ function showSection(section) {
     if (products) products.style.display = 'none';
     if (blog) blog.style.display = 'none';
 
-    navLinks.forEach(link => link.classList.remove('active'));
+    if (navLinks) {
+        navLinks.forEach(link => link.classList.remove('active'));
+    }
 
     if (section === 'trangchu') {
         if (home) home.style.display = 'block';
-        document.getElementById('nav-home').classList.add('active');
+        const navHome = document.getElementById('nav-home');
+        if (navHome) navHome.classList.add('active');
     } 
     else if (section === 'sanpham') {
         if (products) products.style.display = 'block';
-        document.getElementById('nav-products').classList.add('active');
-        loadProducts(); // Gọi hàm tải sản phẩm
+        const navProd = document.getElementById('nav-products');
+        if (navProd) navProd.classList.add('active');
+        loadProducts(); 
     } 
     else if (section === 'blog') {
         if (blog) blog.style.display = 'block';
-        document.getElementById('nav-blog').classList.add('active');
+        const navBlog = document.getElementById('nav-blog');
+        if (navBlog) navBlog.classList.add('active');
     }
-}
+};
 
-// --- 2. HIỂN THỊ CHÀO MỪNG & PHÂN QUYỀN ADMIN ---
+// --- 2. HIỂN THỊ CHÀO MỪNG & PHÂN QUYỀN ---
 function updateWelcomeMarquee() {
     const welcomeMsg = document.getElementById('welcome-msg');
     const authButtons = document.getElementById('auth-buttons');
@@ -477,17 +482,21 @@ function updateWelcomeMarquee() {
         if (adminSection) adminSection.style.display = role === 'admin' ? 'block' : 'none';
         
         welcomeMsg.classList.add('running');
-        authButtons.innerHTML = `<button onclick="logout()" class="btn-auth btn-logout">Đăng xuất</button>`;
+        if (authButtons) {
+            authButtons.innerHTML = `<button onclick="logout()" class="btn-auth btn-logout">Đăng xuất</button>`;
+        }
     } else {
         welcomeMsg.innerText = "🚀 STORE LIMITED: KHUYẾN MÃI CỰC KHỦNG - GIẢM GIÁ ĐẾN 50% CHO TẤT CẢ SẢN PHẨM! 🚀";
         welcomeMsg.classList.add('running');
-        authButtons.innerHTML = `<button onclick="goToLogin()" class="btn-auth btn-login">Đăng nhập</button>`;
+        if (authButtons) {
+            authButtons.innerHTML = `<button onclick="goToLogin()" class="btn-auth btn-login">Đăng nhập</button>`;
+        }
     }
 }
 
-// --- 3. QUẢN LÝ SẢN PHẨM (SỬ DỤNG API_URL) ---
+// --- 3. QUẢN LÝ SẢN PHẨM (API) ---
 
-async function addProduct() {
+window.addProduct = async function() {
     if (role !== 'admin') {
         alert("Bạn không có quyền thực hiện chức năng này!");
         return;
@@ -513,7 +522,6 @@ async function addProduct() {
         };
 
         try {
-            // SỬA: Dùng API_URL thay cho localhost
             const res = await fetch(`${API_URL}/add-product`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -524,17 +532,17 @@ async function addProduct() {
             if (result.status === "success") {
                 alert("Đã thêm sản phẩm thành công!");
                 nameEl.value = ""; priceEl.value = ""; imgInput.value = ""; 
-                loadProducts(); // Load lại danh sách
-                loadTop3Premium(); // Load lại top 3
+                loadProducts();
+                loadTop3Premium();
             }
         } catch (error) {
             alert("Lỗi kết nối Server! Kiểm tra lại link Render.");
         }
     };
     reader.readAsDataURL(file);
-}
+};
 
-async function deleteProduct(id) {
+window.deleteProduct = async function(id) {
     if (role !== 'admin') {
         alert("Bạn không có quyền xóa sản phẩm!");
         return;
@@ -542,7 +550,6 @@ async function deleteProduct(id) {
 
     if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
         try {
-            // SỬA: Dùng API_URL thay cho localhost
             const res = await fetch(`${API_URL}/delete-product/${id}`, { method: 'DELETE' });
             const result = await res.json();
             if (result.status === "success") {
@@ -553,10 +560,9 @@ async function deleteProduct(id) {
             console.error("Lỗi xóa sản phẩm:", error);
         }
     }
-}
+};
 
 function loadProducts() {
-    // SỬA: Dùng API_URL thay cho localhost
     fetch(`${API_URL}/products`)
     .then(res => res.json())
     .then(data => {
@@ -584,7 +590,6 @@ function loadProducts() {
 }
 
 function loadTop3Premium() {
-    // SỬA: Dùng API_URL thay cho localhost
     fetch(`${API_URL}/products`)
     .then(res => res.json())
     .then(data => {
@@ -611,9 +616,8 @@ function loadTop3Premium() {
     .catch(err => console.error("Lỗi tải Top 3:", err));
 }
 
-// --- 4. HỆ THỐNG GIỎ HÀNG (GIỮ NGUYÊN LOGIC LOCALSTORAGE) ---
-
-function addToCart(id, name, price, image) {
+// --- 4. GIỎ HÀNG ---
+window.addToCart = function(id, name, price, image) {
     if (!user) {
         alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
         window.location.href = "Dangnhap.html";
@@ -630,7 +634,7 @@ function addToCart(id, name, price, image) {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartBadge();
     alert(`Đã thêm ${name} vào giỏ hàng!`);
-}
+};
 
 function updateCartBadge() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -639,14 +643,16 @@ function updateCartBadge() {
     if (badge) badge.innerText = totalItems;
 }
 
-function openCart() {
-    document.getElementById('cartModal').style.display = "block";
+window.openCart = function() {
+    const modal = document.getElementById('cartModal');
+    if (modal) modal.style.display = "block";
     renderCart();
-}
+};
 
-function closeCart() {
-    document.getElementById('cartModal').style.display = "none";
-}
+window.closeCart = function() {
+    const modal = document.getElementById('cartModal');
+    if (modal) modal.style.display = "none";
+};
 
 function renderCart() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -656,7 +662,8 @@ function renderCart() {
 
     if (cart.length === 0) {
         list.innerHTML = "<p style='text-align:center; padding: 40px; color: #888;'>Giỏ hàng trống rỗng!</p>";
-        document.getElementById('totalPrice').innerText = "0";
+        const totalEl = document.getElementById('totalPrice');
+        if (totalEl) totalEl.innerText = "0";
         return;
     }
 
@@ -678,16 +685,16 @@ function renderCart() {
     calculateSelectedTotal();
 }
 
-function changeQty(index, delta) {
+window.changeQty = function(index, delta) {
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
     cart[index].quantity += delta;
     if (cart[index].quantity < 1) cart[index].quantity = 1;
     localStorage.setItem('cart', JSON.stringify(cart));
     renderCart();
     updateCartBadge();
-}
+};
 
-function calculateSelectedTotal() {
+window.calculateSelectedTotal = function() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const checkboxes = document.querySelectorAll('.cart-checkbox');
     let total = 0;
@@ -697,21 +704,21 @@ function calculateSelectedTotal() {
             total += Number(cart[index].price) * cart[index].quantity;
         }
     });
-    document.getElementById('totalPrice').innerText = total.toLocaleString();
-}
+    const totalEl = document.getElementById('totalPrice');
+    if (totalEl) totalEl.innerText = total.toLocaleString();
+};
 
-function removeFromCart(index) {
+window.removeFromCart = function(index) {
     if (confirm("Xóa sản phẩm này?")) {
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         cart.splice(index, 1);
         localStorage.setItem('cart', JSON.stringify(cart));
         renderCart(); updateCartBadge();
     }
-}
+};
 
-function checkoutSelected() {
-    const currentUser = sessionStorage.getItem('username') || user; 
-    if (!currentUser) {
+window.checkoutSelected = function() {
+    if (!user) {
         alert("Vui lòng đăng nhập!");
         window.location.href = "Dangnhap.html";
         return;
@@ -737,27 +744,27 @@ function checkoutSelected() {
     alert("Thanh toán thành công!");
     renderCart(); 
     updateCartBadge();
-}
+};
 
 // --- 5. TÌM KIẾM ---
-function searchProduct() {
+window.searchProduct = function() {
     const input = document.getElementById('searchInput').value.toLowerCase();
     document.querySelectorAll('.product-card').forEach(card => {
         const name = card.querySelector('h4').innerText.toLowerCase();
         card.style.display = name.includes(input) ? "" : "none";
     });
-}
+};
 
 // --- 6. HỆ THỐNG ---
-function logout() {
+window.logout = function() {
     if(confirm("Bạn chắc chắn muốn đăng xuất?")) { 
         sessionStorage.clear(); 
         location.reload(); 
     }
-}
-function goToLogin() { window.location.href = "Dangnhap.html"; }
+};
+window.goToLogin = function() { window.location.href = "Dangnhap.html"; };
 
-// --- KHỞI CHẠY KHI TẢI TRANG ---
+// --- KHỞI CHẠY ---
 document.addEventListener('DOMContentLoaded', () => {
     updateWelcomeMarquee();
     loadProducts();
