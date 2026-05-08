@@ -30,17 +30,20 @@ module.exports = {
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Tạo file database ngay trong thư mục code
+// Sửa đường dẫn để tương thích tốt nhất với môi trường Render
 const dbPath = path.resolve(__dirname, 'database.sqlite');
 
 const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('❌ Lỗi kết nối:', err.message);
-    else console.log('✅ Đã kết nối Database SQLite miễn phí!');
+    if (err) {
+        console.error('❌ Lỗi kết nối:', err.message);
+    } else {
+        console.log('✅ Đã kết nối Database SQLite thành công!');
+    }
 });
 
-// Tự động tạo bảng (Nếu chưa có)
+// Khởi tạo cấu trúc dữ liệu
 db.serialize(() => {
-    // 1. TẠO BẢNG TRƯỚC
+    // 1. Tạo bảng Users (Dùng để đăng nhập)
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -51,13 +54,24 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // 2. CHÈN ADMIN SAU (Ép buộc tạo tài khoản mặc định)
-    db.run(`INSERT OR IGNORE INTO users (username, password, email, full_name, role) 
-            VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')`, (err) => {
+    // 2. Tạo bảng Products (Dùng để lưu sản phẩm - THIẾU CÁI NÀY SẼ LỖI 500)
+    db.run(`CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        price REAL NOT NULL,
+        image TEXT, -- Lưu dưới dạng Base64 (Chuỗi văn bản dài)
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // 3. Chèn tài khoản Admin mặc định
+    const insertAdmin = `INSERT OR IGNORE INTO users (username, password, email, full_name, role) 
+                         VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')`;
+    
+    db.run(insertAdmin, (err) => {
         if (err) {
             console.error("Lỗi tạo admin mặc định:", err.message);
         } else {
-            console.log("✅ Đã kiểm tra/tạo tài khoản admin mặc định.");
+            console.log("✅ Đã kiểm tra/tạo tài khoản admin mặc định (admin/12345).");
         }
     });
 });
