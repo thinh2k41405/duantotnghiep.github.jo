@@ -1,9 +1,9 @@
+/*
 // Lấy thông tin đăng nhập từ hệ thống
 const role = sessionStorage.getItem('userRole');
 const user = sessionStorage.getItem('username');
 const API_URL = 'https://ShopLimited.onrender.com'; 
 
-/*
 // --- 1. CHUYỂN ĐỔI GIAO DIỆN (SECTION) ---
 function showSection(section) {
     // Lấy tất cả các "trang" nội dung
