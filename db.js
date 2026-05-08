@@ -40,8 +40,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Tự động tạo bảng (Nếu chưa có)
 db.serialize(() => {
-    db.run(`INSERT OR IGNORE INTO users (username, password, email, full_name, role) 
-        VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')`);
+    // 1. TẠO BẢNG TRƯỚC
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -51,6 +50,16 @@ db.serialize(() => {
         role TEXT DEFAULT 'user',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // 2. CHÈN ADMIN SAU (Ép buộc tạo tài khoản mặc định)
+    db.run(`INSERT OR IGNORE INTO users (username, password, email, full_name, role) 
+            VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')`, (err) => {
+        if (err) {
+            console.error("Lỗi tạo admin mặc định:", err.message);
+        } else {
+            console.log("✅ Đã kiểm tra/tạo tài khoản admin mặc định.");
+        }
+    });
 });
 
 module.exports = db;
