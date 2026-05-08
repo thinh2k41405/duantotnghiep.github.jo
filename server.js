@@ -149,19 +149,31 @@ app.post('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, password, email, full_name } = req.body;
     const role = 'user'; 
-    
-    const sql = `INSERT INTO users (username, password, email, full_name, role) VALUES ($1, $2, $3, $4, $5)`;
-    
+
     try {
-        await db.run(sql, [username, password, email, full_name, role]);
-        res.json({ status: "success" });
-    } catch (err) {
-        // Kiểm tra lỗi trùng lặp (username đã tồn tại)
-        if (err.message && err.message.toLowerCase().includes('unique')) {
+        // 1. Kiểm tra xem username đã tồn tại chưa bằng hàm db.get đã viết trong db.js
+        const userExists = await db.get('SELECT * FROM users WHERE username = $1', [username]);
+        
+        if (userExists) {
+            // Nếu tìm thấy user, trả về status "exists" ngay lập tức
             return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
         }
-        console.error("Lỗi đăng ký:", err.message);
-        res.status(500).json({ status: "error", message: err.message });
+
+        // 2. Nếu chưa tồn tại, thực hiện chèn dữ liệu mới
+        const sql = `INSERT INTO users (username, password, email, full_name, role) VALUES ($1, $2, $3, $4, $5)`;
+        await db.run(sql, [username, password, email, full_name, role]);
+
+        // 3. Trả về thành công
+        res.json({ status: "success" });
+
+    } catch (err) {
+        // Bắt lỗi dự phòng nếu có lỗi trùng lặp từ Database (mã 23505 của Postgres)
+        if (err.code === '23505' || (err.message && err.message.toLowerCase().includes('unique'))) {
+            return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
+        }
+
+        console.error("❌ Lỗi đăng ký chi tiết:", err);
+        res.status(500).json({ status: "error", message: "Lỗi hệ thống khi đăng ký" });
     }
 });
 
