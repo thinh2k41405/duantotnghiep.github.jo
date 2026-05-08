@@ -114,18 +114,20 @@
     // Mặc định hiện form Login khi mới tải trang
     toggleForm(true);
 };*/
-
 window.onload = function() {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const msgBox = document.getElementById('message-box');
 
-    // QUAN TRỌNG: Thay link này bằng link Render của bạn
-   const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
+    // Tự động nhận diện môi trường: Nếu chạy local thì dùng localhost, không thì dùng Render
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : 'https://duantotnghiep-github-jo.onrender.com';
 
     // --- 1. HÀM HIỂN THỊ THÔNG BÁO ---
     function showMsg(text, type) {
         if (!msgBox) return;
+        msgBox.style.display = 'block'; 
         msgBox.classList.remove('msg-error', 'msg-success', 'msg-warning');
         
         if (type === "red") msgBox.classList.add('msg-error');
@@ -144,7 +146,10 @@ window.onload = function() {
             if(loginForm) loginForm.style.display = 'none';     
             if(registerForm) registerForm.style.display = 'block';   
         }
-        if(msgBox) msgBox.innerText = ""; 
+        if(msgBox) {
+            msgBox.innerText = ""; 
+            msgBox.style.display = 'none';
+        }
     }
 
     // Gán sự kiện cho các link chuyển đổi
@@ -170,7 +175,10 @@ window.onload = function() {
                 return;
             }
 
-            // Gửi dưới dạng JSON (Chuẩn hơn cho Node.js hiện đại)
+            // Vô hiệu hóa nút để tránh bấm nhiều lần
+            btnLogin.disabled = true;
+            btnLogin.innerText = "Đang xử lý...";
+
             fetch(`${API_URL}/login`, { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -178,11 +186,13 @@ window.onload = function() {
             })
             .then(res => res.json())
             .then(data => {
+                btnLogin.disabled = false;
+                btnLogin.innerText = "ĐĂNG NHẬP";
+
                 if (data.status === "success") {
                     const roleName = data.role === 'admin' ? "Quản trị viên" : "Khách hàng";
                     showMsg(`🎉 Chào ${roleName} ${data.username}! Đang vào hệ thống...`, "green");
                     
-                    // Lưu vào sessionStorage để dùng ở trang chủ
                     sessionStorage.setItem('username', data.username);
                     sessionStorage.setItem('userRole', data.role);
 
@@ -191,7 +201,11 @@ window.onload = function() {
                     showMsg("❌ " + (data.message || "Tài khoản hoặc mật khẩu sai!"), "red");
                 }
             })
-            .catch(() => showMsg("❌ Lỗi kết nối Server!", "red"));
+            .catch(() => {
+                btnLogin.disabled = false;
+                btnLogin.innerText = "ĐĂNG NHẬP";
+                showMsg("❌ Lỗi kết nối Server!", "red");
+            });
         };
     }
 
@@ -209,6 +223,9 @@ window.onload = function() {
                 return;
             }
 
+            btnRegister.disabled = true;
+            btnRegister.innerText = "Đang tạo tài khoản...";
+
             fetch(`${API_URL}/register`, { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -221,6 +238,9 @@ window.onload = function() {
             })
             .then(res => res.json()) 
             .then(data => {
+                btnRegister.disabled = false;
+                btnRegister.innerText = "ĐĂNG KÝ";
+
                 if (data.status === "success") {
                     showMsg("✅ Đăng ký thành công! Hãy đăng nhập.", "green");
                     setTimeout(() => toggleForm(true), 2000);
@@ -228,12 +248,17 @@ window.onload = function() {
                     showMsg("❌ " + (data.message || "Tài khoản đã tồn tại!"), "red");
                 }
             })
-            .catch(() => showMsg("❌ Lỗi kết nối Server!", "red"));
+            .catch(() => {
+                btnRegister.disabled = false;
+                btnRegister.innerText = "ĐĂNG KÝ";
+                showMsg("❌ Lỗi kết nối Server!", "red");
+            });
         };
     }
 
     // Tự động đóng menu trên mobile
-    document.querySelectorAll('.nav-links a').forEach(link => {
+    const menuLinks = document.querySelectorAll('.nav-links a');
+    menuLinks.forEach(link => {
         link.addEventListener('click', () => {
             const navMenu = document.getElementById('navMenu');
             if(navMenu) navMenu.classList.remove('active');

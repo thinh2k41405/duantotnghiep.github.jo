@@ -426,14 +426,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });*/
 // --- 0. KHAI BÁO BIẾN TOÀN CỤC ---
 // Sửa lỗi: Chỉ dùng 'let' để có thể cập nhật giá trị mà không bị báo lỗi khai báo trùng (Duplicate declaration)
-let role = sessionStorage.getItem('userRole');
-let user = sessionStorage.getItem('username');
+// Sử dụng tên biến khác để tránh trùng lặp với các script khác
+const currentRole = sessionStorage.getItem('userRole');
+const currentUser = sessionStorage.getItem('username');
 
 // QUAN TRỌNG: Link Render của bạn
 const API_URL = 'https://duantotnghiep-github-jo.onrender.com';
 
 // --- 1. CHUYỂN ĐỔI GIAO DIỆN (SECTION) ---
-// Sửa lỗi: Gán vào window để file header.html có thể gọi được hàm này
 window.showSection = function(section) {
     const home = document.getElementById('home-content');
     const products = document.getElementById('product-content');
@@ -474,12 +474,12 @@ function updateWelcomeMarquee() {
 
     if (!welcomeMsg) return;
 
-    if (user) {
-        welcomeMsg.innerText = role === 'admin' 
-            ? `⚡ [HỆ THỐNG] 🛡️ QUẢN TRỊ VIÊN: Chào mừng ${user} bạn đã quay trở lại! ⚡` 
-            : `✨ [VIP] 👋 Chào mừng ${user} đến với Store Limited! ✨`;
+    if (currentUser) {
+        welcomeMsg.innerText = currentRole === 'admin' 
+            ? `⚡ [HỆ THỐNG] 🛡️ QUẢN TRỊ VIÊN: Chào mừng ${currentUser} bạn đã quay trở lại! ⚡` 
+            : `✨ [VIP] 👋 Chào mừng ${currentUser} đến với Store Limited! ✨`;
         
-        if (adminSection) adminSection.style.display = role === 'admin' ? 'block' : 'none';
+        if (adminSection) adminSection.style.display = currentRole === 'admin' ? 'block' : 'none';
         
         welcomeMsg.classList.add('running');
         if (authButtons) {
@@ -497,7 +497,7 @@ function updateWelcomeMarquee() {
 // --- 3. QUẢN LÝ SẢN PHẨM (API) ---
 
 window.addProduct = async function() {
-    if (role !== 'admin') {
+    if (currentRole !== 'admin') {
         alert("Bạn không có quyền thực hiện chức năng này!");
         return;
     }
@@ -536,14 +536,14 @@ window.addProduct = async function() {
                 loadTop3Premium();
             }
         } catch (error) {
-            alert("Lỗi kết nối Server! Kiểm tra lại link Render.");
+            alert("Lỗi kết nối Server! Ảnh quá nặng hoặc Server bận.");
         }
     };
     reader.readAsDataURL(file);
 };
 
 window.deleteProduct = async function(id) {
-    if (role !== 'admin') {
+    if (currentRole !== 'admin') {
         alert("Bạn không có quyền xóa sản phẩm!");
         return;
     }
@@ -571,7 +571,7 @@ function loadProducts() {
         list.innerHTML = ""; 
 
         data.forEach(p => {
-            let deleteBtn = role === 'admin' 
+            let deleteBtn = currentRole === 'admin' 
                 ? `<button onclick="deleteProduct(${p.id})" class="btn-delete">Xóa sản phẩm</button>` 
                 : "";
             list.innerHTML += `
@@ -596,6 +596,7 @@ function loadTop3Premium() {
         const topContainer = document.getElementById('topPriceProducts');
         if (!topContainer) return;
 
+        // Sắp xếp theo giá giảm dần để lấy Top 3 đắt nhất
         const sorted = data.sort((a, b) => Number(b.price) - Number(a.price));
         const top3 = sorted.slice(0, 3);
 
@@ -618,7 +619,7 @@ function loadTop3Premium() {
 
 // --- 4. GIỎ HÀNG ---
 window.addToCart = function(id, name, price, image) {
-    if (!user) {
+    if (!currentUser) {
         alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
         window.location.href = "Dangnhap.html";
         return;
@@ -671,15 +672,15 @@ function renderCart() {
         list.innerHTML += `
             <div class="cart-item" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #2a2a2a;">
                 <input type="checkbox" class="cart-checkbox" data-index="${index}" onchange="calculateSelectedTotal()">
-                <img src="${item.image}" style="width: 50px; margin-left: 10px;">
-                <div style="flex:1; margin-left: 10px;">${item.name}</div>
-                <div>${Number(item.price).toLocaleString()}₫</div>
-                <div style="margin: 0 10px;">
-                    <button onclick="changeQty(${index}, -1)">-</button>
+                <img src="${item.image}" style="width: 50px; height: 50px; object-fit: cover; margin-left: 10px; border-radius: 4px;">
+                <div style="flex:1; margin-left: 10px; font-weight: bold;">${item.name}</div>
+                <div style="color: #ff4d4d;">${Number(item.price).toLocaleString()}₫</div>
+                <div style="margin: 0 15px; display: flex; align-items: center; gap: 5px;">
+                    <button onclick="changeQty(${index}, -1)" style="width:25px">-</button>
                     <span>${item.quantity}</span>
-                    <button onclick="changeQty(${index}, 1)">+</button>
+                    <button onclick="changeQty(${index}, 1)" style="width:25px">+</button>
                 </div>
-                <button onclick="removeFromCart(${index})" style="color:red; background:none; border:none;">Xóa</button>
+                <button onclick="removeFromCart(${index})" style="color:#ff4444; background:none; border:none; cursor:pointer;">Xóa</button>
             </div>`;
     });
     calculateSelectedTotal();
@@ -709,7 +710,7 @@ window.calculateSelectedTotal = function() {
 };
 
 window.removeFromCart = function(index) {
-    if (confirm("Xóa sản phẩm này?")) {
+    if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
         cart.splice(index, 1);
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -718,7 +719,7 @@ window.removeFromCart = function(index) {
 };
 
 window.checkoutSelected = function() {
-    if (!user) {
+    if (!currentUser) {
         alert("Vui lòng đăng nhập!");
         window.location.href = "Dangnhap.html";
         return;
@@ -727,21 +728,24 @@ window.checkoutSelected = function() {
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
     const checkboxes = document.querySelectorAll('.cart-checkbox');
     let hasChecked = false;
+    let newCart = [];
 
-    for (let i = checkboxes.length - 1; i >= 0; i--) {
-        if (checkboxes[i].checked) {
+    // Lọc ra những sản phẩm KHÔNG được chọn (giữ lại trong giỏ)
+    for (let i = 0; i < cart.length; i++) {
+        if (!checkboxes[i].checked) {
+            newCart.push(cart[i]);
+        } else {
             hasChecked = true;
-            cart.splice(i, 1);
         }
     }
 
     if (!hasChecked) {
-        alert("Vui lòng chọn sản phẩm!");
+        alert("Vui lòng tích chọn sản phẩm muốn mua!");
         return;
     }
 
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert("Thanh toán thành công!");
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    alert("Cảm ơn bạn! Đơn hàng đã được ghi nhận thành công.");
     renderCart(); 
     updateCartBadge();
 };
@@ -759,7 +763,7 @@ window.searchProduct = function() {
 window.logout = function() {
     if(confirm("Bạn chắc chắn muốn đăng xuất?")) { 
         sessionStorage.clear(); 
-        location.reload(); 
+        window.location.href = "Dangnhap.html"; 
     }
 };
 window.goToLogin = function() { window.location.href = "Dangnhap.html"; };

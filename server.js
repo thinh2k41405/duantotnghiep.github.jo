@@ -106,93 +106,104 @@ app.delete('/delete-product/:id', async (req, res) => {
 app.listen(3000, () => console.log("🚀 Server chạy tại: http://localhost:3000"));*/
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // Thêm thư viện để xử lý đường dẫn file
-const db = require('./db'); 
+const path = require('path'); 
+const db = require('./db'); // Đảm bảo file db.js đã dán link postgresql://...
 
 const app = express();
+
+// --- CẤU HÌNH MIDDLEWARE ---
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-// Cấu hình giới hạn dung lượng để nhận được ảnh từ client
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use(cors({
-    origin: '*', // Cho phép tất cả các nguồn truy cập để tránh lỗi đỏ lúc nãy
+    origin: '*', 
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
     allowedHeaders: ['Content-Type']
 }));
 
-// --- MỚI: PHỤC VỤ GIAO DIỆN (FRONTEND) ---
-// Giúp Server hiểu và mở được các file HTML, CSS, JS trong thư mục gốc
+// Phục vụ giao diện (Frontend)
 app.use(express.static(path.join(__dirname, '/')));
 
-// Tự động mở file Dangnhap.html (hoặc file chính của bạn) khi vào link gốc
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Dangnhap.html')); 
 });
 
-// --- 1. ROUTE ĐĂNG NHẬP ---
-app.post('/login', (req, res) => {
+// --- 1. ROUTE ĐĂNG NHẬP (Sửa sang Async/Await) ---
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const sql = 'SELECT username, role FROM users WHERE username = ? AND password = ?';
+    const sql = 'SELECT username, role FROM users WHERE username = $1 AND password = $2';
     
-    db.get(sql, [username, password], (err, row) => {
-        if (err) return res.status(500).json({ status: "error", message: err.message });
+    try {
+        const row = await db.get(sql, [username, password]);
         if (row) {
             res.json({ status: "success", username: row.username, role: row.role });
         } else {
             res.json({ status: "fail", message: "Sai tài khoản hoặc mật khẩu" });
         }
-    });
+    } catch (err) {
+        console.error("Lỗi đăng nhập:", err.message);
+        res.status(500).json({ status: "error", message: err.message });
+    }
 });
-
-// --- 2. ROUTE ĐĂNG KÝ ---
-app.post('/register', (req, res) => {
+// --- 2. ROUTE ĐĂNG KÝ (Tất cả đăng ký mới đều là 'user') ---
+app.post('/register', async (req, res) => {
     const { username, password, email, full_name } = req.body;
-    const sql = `INSERT INTO users (username, password, email, full_name, role) VALUES (?, ?, ?, ?, 'user')`;
+    const role = 'user'; 
     
-    db.run(sql, [username, password, email, full_name], function(err) {
-        if (err) {
-            if (err.message.includes('UNIQUE')) {
-                return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
-            }
-            return res.status(500).json({ status: "error" });
-        }
+    const sql = `INSERT INTO users (username, password, email, full_name, role) VALUES ($1, $2, $3, $4, $5)`;
+    
+    try {
+        await db.run(sql, [username, password, email, full_name, role]);
         res.json({ status: "success" });
-    });
+    } catch (err) {
+        // Kiểm tra lỗi trùng lặp (username đã tồn tại)
+        if (err.message && err.message.toLowerCase().includes('unique')) {
+            return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
+        }
+        console.error("Lỗi đăng ký:", err.message);
+        res.status(500).json({ status: "error", message: err.message });
+    }
 });
 
-// --- 3. ROUTE THÊM SẢN PHẨM ---
-app.post('/add-product', (req, res) => {
+// --- 3. ROUTE THÊM SẢN PHẨM (Đã hỗ trợ ảnh nặng) ---
+app.post('/add-product', async (req, res) => {
     const { name, price, image } = req.body;
-    const sql = 'INSERT INTO products (name, price, image) VALUES (?, ?, ?)';
+    const sql = 'INSERT INTO products (name, price, image) VALUES ($1, $2, $3)';
     
-    db.run(sql, [name, price, image], function(err) {
-        if (err) return res.status(500).json({ status: "error" });
+    try {
+        await db.run(sql, [name, price, image]);
         res.json({ status: "success" });
-    });
+    } catch (err) {
+        console.error("Lỗi thêm sản phẩm:", err.message);
+        res.status(500).json({ status: "error" });
+    }
 });
 
 // --- 4. ROUTE LẤY DANH SÁCH SẢN PHẨM ---
-app.get('/products', (req, res) => {
+app.get('/products', async (req, res) => {
     const sql = 'SELECT id, name, price, image FROM products ORDER BY id DESC';
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ status: "error" });
+    try {
+        const rows = await db.all(sql, []);
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ status: "error" });
+    }
 });
 
 // --- 5. ROUTE XÓA SẢN PHẨM ---
-app.delete('/delete-product/:id', (req, res) => {
+app.delete('/delete-product/:id', async (req, res) => {
     const id = req.params.id;
-    const sql = 'DELETE FROM products WHERE id = ?';
-    db.run(sql, id, function(err) {
-        if (err) return res.status(500).json({ status: "error" });
+    const sql = 'DELETE FROM products WHERE id = $1';
+    try {
+        await db.run(sql, [id]);
         res.json({ status: "success" });
-    });
+    } catch (err) {
+        res.status(500).json({ status: "error" });
+    }
 });
 
 // QUAN TRỌNG: Cấu hình cho Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server đang chạy trên cổng: ${PORT}`);
+    console.log(`🚀 Server Neon đang chạy trên cổng: ${PORT}`);
 });
