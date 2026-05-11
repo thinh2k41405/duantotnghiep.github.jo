@@ -29,71 +29,60 @@ module.exports = {
 };*/
 const { Pool } = require('pg');
 
+// Kết nối trực tiếp tới Neon bằng link bạn cung cấp
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+    connectionString: 'postgresql://neondb_owner:npg_5IdBOpKNbRm3@ep-silent-night-aowm1oe8-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
-// Khởi tạo cấu trúc dữ liệu
+// Hàm khởi tạo bảng
 const initDb = async () => {
     try {
-        // 1. Tạo bảng Users
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE,
-                password TEXT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
                 email TEXT,
                 full_name TEXT,
                 role TEXT DEFAULT 'user',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // 2. Tạo bảng Products
-        await pool.query(`
+            );
             CREATE TABLE IF NOT EXISTS products (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL,
                 price DECIMAL NOT NULL,
                 image TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
+        `);
+        
+        // Tạo admin mặc định
+        await pool.query(`
+            INSERT INTO users (username, password, email, full_name, role)
+            VALUES ('admin', '12345', 'admin@example.com', 'Administrator', 'admin')
+            ON CONFLICT (username) DO NOTHING
         `);
 
-        // 3. Chèn Admin (Sử dụng tham số để tránh SQL Injection)
-        const insertAdmin = `
-            INSERT INTO users (username, password, email, full_name, role)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (username) DO NOTHING
-        `;
-        await pool.query(insertAdmin, ['admin', '12345', 'admin@example.com', 'Administrator', 'admin']);
-
-        console.log("✅ Neon PostgreSQL: Khởi tạo bảng thành công!");
+        console.log("✅ Kết nối Neon thành công và đã khởi tạo bảng!");
     } catch (err) {
-        console.error("❌ Lỗi khởi tạo Database Neon:", err.message);
+        console.error("❌ Lỗi Database:", err.message);
     }
 };
 
 initDb();
 
 module.exports = {
-    // Luôn dùng cái này để thực thi lệnh
     query: (text, params) => pool.query(text, params),
-    
-    // Hàm lấy 1 dòng - Dùng cho Register/Login check
     get: async (text, params) => {
         const res = await pool.query(text, params);
-        return res.rows.length > 0 ? res.rows[0] : null; // Trả về null nếu ko có
+        return res.rows.length > 0 ? res.rows[0] : null;
     },
-
-    // Hàm lấy danh sách
     all: async (text, params) => {
         const res = await pool.query(text, params);
         return res.rows;
     },
-
     run: (text, params) => pool.query(text, params)
 };

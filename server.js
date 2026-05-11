@@ -107,77 +107,91 @@ app.listen(3000, () => console.log("🚀 Server chạy tại: http://localhost:3
 const express = require('express');
 const cors = require('cors');
 const path = require('path'); 
-const db = require('./db'); // Đảm bảo file db.js đã dán link postgresql://...
+const db = require('./db'); 
 
 const app = express();
 
-// --- CẤU HÌNH MIDDLEWARE ---
+// --- 1. CẤU HÌNH MIDDLEWARE ---
+// Hỗ trợ upload ảnh Base64 dung lượng lớn
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-app.use(cors({
-    origin: '*', 
-    methods: ['GET', 'POST', 'DELETE', 'PUT'],
-    allowedHeaders: ['Content-Type']
-}));
+// Cấu hình CORS để Frontend có thể gọi API từ bất cứ đâu
+app.use(cors());
 
-// Phục vụ giao diện (Frontend)
+// Phục vụ các file tĩnh (HTML, CSS, JS, Image)
 app.use(express.static(path.join(__dirname, '/')));
 
+// --- 2. ĐIỀU HƯỚNG GIAO DIỆN ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Dangnhap.html')); 
 });
 
-// --- 1. ROUTE ĐĂNG NHẬP (Sửa sang Async/Await) ---
+// --- 3. API ĐĂNG NHẬP ---
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    // Lưu ý: Trong thực tế nên dùng bcrypt để so sánh mật khẩu đã hash
     const sql = 'SELECT username, role FROM users WHERE username = $1 AND password = $2';
     
     try {
         const row = await db.get(sql, [username, password]);
         if (row) {
+            console.log(`✅ Người dùng ${username} đăng nhập thành công.`);
             res.json({ status: "success", username: row.username, role: row.role });
         } else {
             res.json({ status: "fail", message: "Sai tài khoản hoặc mật khẩu" });
         }
     } catch (err) {
-        console.error("Lỗi đăng nhập:", err.message);
-        res.status(500).json({ status: "error", message: err.message });
+        console.error("❌ Lỗi đăng nhập:", err.message);
+        res.status(500).json({ status: "error", message: "Lỗi máy chủ nội bộ" });
     }
 });
-// --- 2. ROUTE ĐĂNG KÝ (Tất cả đăng ký mới đều là 'user') ---
+
+// --- 4. API ĐĂNG KÝ ---
 app.post('/register', async (req, res) => {
     const { username, password, email, full_name } = req.body;
     const role = 'user'; 
 
     try {
-        // 1. Kiểm tra xem username đã tồn tại chưa bằng hàm db.get đã viết trong db.js
-        const userExists = await db.get('SELECT * FROM users WHERE username = $1', [username]);
+        // Kiểm tra username tồn tại (Sử dụng hàm get đã tối ưu trả về null nếu ko thấy)
+        const userExists = await db.get('SELECT username FROM users WHERE username = $1', [username]);
         
         if (userExists) {
-            // Nếu tìm thấy user, trả về status "exists" ngay lập tức
             return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
         }
 
-        // 2. Nếu chưa tồn tại, thực hiện chèn dữ liệu mới
+        // Chèn dữ liệu mới
         const sql = `INSERT INTO users (username, password, email, full_name, role) VALUES ($1, $2, $3, $4, $5)`;
         await db.run(sql, [username, password, email, full_name, role]);
 
-        // 3. Trả về thành công
+        console.log(`👤 Đã tạo tài khoản mới: ${username}`);
         res.json({ status: "success" });
 
     } catch (err) {
-        // Bắt lỗi dự phòng nếu có lỗi trùng lặp từ Database (mã 23505 của Postgres)
-        if (err.code === '23505' || (err.message && err.message.toLowerCase().includes('unique'))) {
+        // Bắt lỗi trùng lặp từ PostgreSQL (mã 23505)
+        if (err.code === '23505') {
             return res.json({ status: "exists", message: "Tài khoản đã tồn tại" });
         }
-
-        console.error("❌ Lỗi đăng ký chi tiết:", err);
-        res.status(500).json({ status: "error", message: "Lỗi hệ thống khi đăng ký" });
+        console.error("❌ Lỗi đăng ký:", err);
+        res.status(500).json({ status: "error", message: "Không thể hoàn tất đăng ký" });
     }
 });
 
-// --- 3. ROUTE THÊM SẢN PHẨM (Đã hỗ trợ ảnh nặng) ---
+// --- 5. API SẢN PHẨM ---
+
+// Lấy danh sách sản phẩm
+app.get('/products', async (req, res) => {
+    const sql = 'SELECT id, name, price, image FROM products ORDER BY id DESC';
+    try {
+        const rows = await db.all(sql, []);
+        res.json(rows);
+    } catch (err) {
+        console.error("❌ Lỗi lấy danh sách sản phẩm:", err.message);
+        res.status(500).json({ status: "error" });
+    }
+});
+
+// Thêm sản phẩm mới
 app.post('/add-product', async (req, res) => {
     const { name, price, image } = req.body;
     const sql = 'INSERT INTO products (name, price, image) VALUES ($1, $2, $3)';
@@ -186,23 +200,12 @@ app.post('/add-product', async (req, res) => {
         await db.run(sql, [name, price, image]);
         res.json({ status: "success" });
     } catch (err) {
-        console.error("Lỗi thêm sản phẩm:", err.message);
+        console.error("❌ Lỗi thêm sản phẩm:", err.message);
         res.status(500).json({ status: "error" });
     }
 });
 
-// --- 4. ROUTE LẤY DANH SÁCH SẢN PHẨM ---
-app.get('/products', async (req, res) => {
-    const sql = 'SELECT id, name, price, image FROM products ORDER BY id DESC';
-    try {
-        const rows = await db.all(sql, []);
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ status: "error" });
-    }
-});
-
-// --- 5. ROUTE XÓA SẢN PHẨM ---
+// Xóa sản phẩm theo ID
 app.delete('/delete-product/:id', async (req, res) => {
     const id = req.params.id;
     const sql = 'DELETE FROM products WHERE id = $1';
@@ -210,12 +213,14 @@ app.delete('/delete-product/:id', async (req, res) => {
         await db.run(sql, [id]);
         res.json({ status: "success" });
     } catch (err) {
+        console.error("❌ Lỗi xóa sản phẩm:", err.message);
         res.status(500).json({ status: "error" });
     }
 });
 
-// QUAN TRỌNG: Cấu hình cho Render
+// --- 6. KHỞI CHẠY SERVER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server Neon đang chạy trên cổng: ${PORT}`);
+    console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
+    console.log(`🌍 Môi trường triển khai: ${process.env.NODE_ENV || 'development'}`);
 });

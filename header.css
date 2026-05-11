@@ -734,3 +734,34 @@ input:-webkit-autofill {
     /* Nếu bạn muốn có bóng đổ bên trong để giữ màu nền tối */
     box-shadow: 0 0 0px 1000px rgb(255 255 255 / 0%) inset !important
 }
+
+
+/* Áp dụng cho khung chứa danh sách sản phẩm */
+.product-container {
+    display: grid;
+    /* Lệnh tự động chia cột: tối thiểu 200px, tối đa chiếm hết 1 phần (1fr) */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 20px; /* Khoảng cách giữa các sản phẩm */
+    padding: 15px;
+    width: 100%; /* Đảm bảo khung luôn rộng bằng màn hình */
+}
+
+/* Áp dụng chung cho tất cả ảnh để không bao giờ bị tràn */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+/* --- CSS CHO MÁY TÍNH --- */
+body { font-family: Arial; }
+.banner { height: 400px; }
+
+/* --- CSS CHO MOBILE (Viết ở cuối file) --- */
+@media (max-width: 768px) {
+    .banner { 
+        height: 200px; /* Điện thoại thì banner thấp xuống cho đỡ chiếm chỗ */
+    }
+    h1 {
+        font-size: 1.5rem; /* Chữ nhỏ lại một chút */
+    }
+}
